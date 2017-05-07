@@ -35,20 +35,11 @@ namespace ProtectedWebAPI
             loggerFactory.AddDebug();
 
             //add this configuration for the middleware needed to validate the tokens
-            app.UseJwtBearerAuthentication(new JwtBearerOptions
+            app.UseIdentityServerAuthentication(new IdentityServerAuthenticationOptions
             {
-                AutomaticAuthenticate = true,
-                AutomaticChallenge = true,
-                TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidIssuer = "http://localhost:50151/",
-
-                    ValidateAudience = true,
-                    ValidAudience = "http://localhost:50151/",
-
-                    ValidateLifetime = true,
-                }
+                Authority = "http://localhost:50151",
+                RequireHttpsMetadata = false,
+                ApiName = "scope.readaccess"
             });
 
             //add this line to show the ERROR STATUS CODES

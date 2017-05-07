@@ -36,7 +36,7 @@ namespace ConsoleTestClient
             using (HttpClient httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authorizationServerToken.access_token);
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "http://localhost:50150/api/values");
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, "http://localhost:56087/api/values");
                 responseMessage = await httpClient.SendAsync(request);
             }
 
