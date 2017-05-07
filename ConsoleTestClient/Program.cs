@@ -11,7 +11,19 @@ namespace ConsoleTestClient
     {
         static void Main(string[] args)
         {
-            string rawJwtToken = RequestTokenToAuthorizationServer(new Uri("http://localhost:50151/connect/token"), "ClientIdThatCanOnlyRead", "scope.readaccess", "secret1")
+            //authorization server parameters owned from the client
+            //this values are issued from the authorization server to the client through a separate process (registration, etc...)
+            Uri authorizationServerTokenIssuerUri = new Uri("http://localhost:50151/connect/token");
+            string clientId = "ClientIdThatCanOnlyRead";    
+            string clientSecret = "secret1";
+            string scope = "scope.readaccess";
+
+            //access token request
+            string rawJwtToken = RequestTokenToAuthorizationServer(
+                 authorizationServerTokenIssuerUri,
+                 clientId, 
+                 scope, 
+                 clientSecret)
                 .GetAwaiter()
                 .GetResult();
 
@@ -21,6 +33,7 @@ namespace ConsoleTestClient
             Console.WriteLine("Token acquired from Authorization Server:");
             Console.WriteLine(authorizationServerToken.access_token);
 
+            //secured web api request
             string response = RequestValuesToSecuredWebApi(authorizationServerToken)
                 .GetAwaiter()
                 .GetResult();
@@ -28,6 +41,26 @@ namespace ConsoleTestClient
             Console.WriteLine("Response received from WebAPI:");
             Console.WriteLine(response);
             Console.ReadKey();
+        }
+
+        private static async Task<string> RequestTokenToAuthorizationServer(Uri uriAuthorizationServer, string clientId, string scope, string clientSecret)
+        {
+            HttpResponseMessage responseMessage;
+            using (HttpClient client = new HttpClient())
+            {
+                HttpRequestMessage tokenRequest = new HttpRequestMessage(HttpMethod.Post, uriAuthorizationServer);
+                HttpContent httpContent = new FormUrlEncodedContent(
+                    new[]
+                    {
+                    new KeyValuePair<string, string>("grant_type", "client_credentials"),
+                    new KeyValuePair<string, string>("client_id", clientId),
+                    new KeyValuePair<string, string>("scope", scope),
+                    new KeyValuePair<string, string>("client_secret", clientSecret)
+                    });
+                tokenRequest.Content = httpContent;
+                responseMessage = await client.SendAsync(tokenRequest);
+            }
+            return await responseMessage.Content.ReadAsStringAsync();
         }
 
         private static async Task<string> RequestValuesToSecuredWebApi(AuthorizationServerAnswer authorizationServerToken)
@@ -40,33 +73,6 @@ namespace ConsoleTestClient
                 responseMessage = await httpClient.SendAsync(request);
             }
 
-            return await responseMessage.Content.ReadAsStringAsync();
-        }
-
-        private static async Task<string> RequestTokenToAuthorizationServer(Uri uriAuthorizationServer, string clientId, string scope, string clientSecret)
-        {
-            HttpResponseMessage responseMessage;
-            using (HttpClient client = new HttpClient())
-            {
-                client.BaseAddress = uriAuthorizationServer;
-                client.DefaultRequestHeaders
-                    .Accept
-                    .Clear();
-                client.DefaultRequestHeaders
-                    .Accept
-                    .Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-                HttpContent httpContent = new FormUrlEncodedContent(
-                    new[]
-                    {
-                    new KeyValuePair<string, string>("grant_type", "client_credentials"),
-                    new KeyValuePair<string, string>("client_id", clientId),
-                    new KeyValuePair<string, string>("scope", scope),
-                    new KeyValuePair<string, string>("client_secret", clientSecret)
-                    });
-
-                responseMessage = await client.PostAsync(uriAuthorizationServer, httpContent);
-            }            
             return await responseMessage.Content.ReadAsStringAsync();
         }
 
