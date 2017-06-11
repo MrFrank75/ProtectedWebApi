@@ -16,12 +16,12 @@ namespace ProtectedWebAPI.Controllers
         public IEnumerable<string> Get()
         {
             //this is a basic code snippet to validate the scope inside the API
-            System.Security.Claims.Claim scope = User.Claims.SingleOrDefault(claim => claim.Type.Equals("scope", StringComparison.CurrentCultureIgnoreCase));
-            if (scope == null)
-                throw new Exception("Scope is missing");
-            if (scope.Value.Equals("scope.readaccess", StringComparison.CurrentCultureIgnoreCase) == false)
+            bool userHasRightScope = User.HasClaim("scope", "scope.readaccess");
+            if (userHasRightScope == false)
+            {
                 throw new Exception("Invalid scope");
-
+            }
+                
             return new string[] { "value1", "value2" };
         }
 
