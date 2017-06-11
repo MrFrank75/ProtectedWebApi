@@ -15,6 +15,13 @@ namespace ProtectedWebAPI.Controllers
         [HttpGet]
         public IEnumerable<string> Get()
         {
+            //this should be readable only if I have the scope "this or that". How do I do this?
+            System.Security.Claims.Claim scope = User.Claims.SingleOrDefault(claim => claim.Type.Equals("scope", StringComparison.CurrentCultureIgnoreCase));
+            if (scope == null)
+                throw new Exception("Scope is missing");
+            if (scope.Value.Equals("scope.readaccess", StringComparison.CurrentCultureIgnoreCase) == false)
+                throw new Exception("Invalid scope");
+
             return new string[] { "value1", "value2" };
         }
 
